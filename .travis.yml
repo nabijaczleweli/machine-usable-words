@@ -1,0 +1,88 @@
+sudo: false
+language: generic
+cache: cargo
+
+matrix:
+  include:
+    - env: LANGUAGE=Rust DEPLOY=true DEPLOY_FILE="$TRAVIS_BUILD_DIR/../machine-usable-words-generator-$TRAVIS_TAG"
+      language: rust
+      rust: stable
+    - env: LANGUAGE=Rust
+      language: rust
+      rust: beta
+    - env: LANGUAGE=Rust CLIPPY=true
+      language: rust
+      rust: nightly
+    - env: LANGUAGE=Ruby DEPLOY=true DEPLOY_FILE="$TRAVIS_BUILD_DIR/../machine-usable-words-generator-man-$TRAVIS_TAG.tbz2"
+      language: ruby
+      rvm: "2.2"
+  allow_failures:
+    - rust: beta
+    - rust: nightly
+
+before_install:
+  - if [ "$TRAVIS_SECURE_ENV_VARS" == "true" ]; then
+      openssl aes-256-cbc -K $encrypted_217e7c749edf_key -iv $encrypted_217e7c749edf_iv -in gh_rsa.enc -out gh_rsa -d;
+    fi
+
+install:
+  - if [ "$LANGUAGE" == "Ruby" ]; then gem install ronn; fi
+
+script:
+  - cd generator
+  -
+  - if [ "$LANGUAGE" == "Rust" ]; then cargo build --verbose; fi
+  - if [ "$LANGUAGE" == "Rust" ] && [ "$DEPLOY" ] && [ "$TRAVIS_TAG" ]; then cargo build --verbose --release; fi
+  -
+  - if [ "$LANGUAGE" == "Rust" ] && [ "$CLIPPY" ]; then
+      rustup component add clippy-preview || cargo install --git https://github.com/rust-lang/rust-clippy clippy -f;
+      cargo clippy;
+    fi
+  -
+  - if [ "$LANGUAGE" == "Ruby" ]; then
+      mkdir man; pushd man;
+      cp ../machine-usable-words-generator.md machine-usable-words-generator.md;
+      ronn --organization="machine-usable-words-generator developers" machine-usable-words-generator.md;
+      popd;
+    fi
+
+after_success:
+  - if [ "$LANGUAGE" == "Rust" ] && [ "$DEPLOY" ] && [ "$TRAVIS_TAG" ]; then
+      cp target/release/machine-usable-words-generator "$DEPLOY_FILE";
+      strip --strip-all --remove-section=.comment --remove-section=.note "$DEPLOY_FILE";
+    fi
+  - if [ "$LANGUAGE" == "Ruby" ] && [ "$TRAVIS_SECURE_ENV_VARS" == "true" ] && [ "$TRAVIS_COMMIT_RANGE" ] && ! [ "$TRAVIS_TAG" ]; then
+      (
+        echo "Update Rust manual for commits $TRAVIS_COMMIT_RANGE";
+        echo;
+        git log $TRAVIS_COMMIT_RANGE --pretty=oneline;
+      ) >> $TRAVIS_BUILD_DIR/../MAN_UPDATE_MSG;
+      mkdir -p ~/.ssh && cp $TRAVIS_BUILD_DIR/gh_rsa ~/.ssh/id_rsa && chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa;
+      git clone -b man git@github.com:$TRAVIS_REPO_SLUG.git $TRAVIS_BUILD_DIR-man;
+      cp -f man/* "$TRAVIS_BUILD_DIR-man";
+      pushd "$TRAVIS_BUILD_DIR-man";
+      git config --global user.email "nabijaczleweli@gmail.com";
+      git config --global user.name "Nabijaczleweli Autouploader Bot";
+      git config --global push.default simple;
+      git add *;
+      git commit -F $TRAVIS_BUILD_DIR/../MAN_UPDATE_MSG;
+      git push;
+      popd;
+    fi
+  - if [ "$LANGUAGE" == "Ruby" ] && [ "$TRAVIS_TAG" ]; then
+      cp -r man "$TRAVIS_BUILD_DIR/../machine-usable-words-generator-man-$TRAVIS_TAG";
+      pushd "$TRAVIS_BUILD_DIR/..";
+      tar -caf "machine-usable-words-generator-man-$TRAVIS_TAG.tbz2" "machine-usable-words-generator-man-$TRAVIS_TAG";
+      rm -rf "machine-usable-words-generator-man-$TRAVIS_TAG";
+      popd;
+    fi
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "cPtKKJPD7I13Sg94arD4J88yPg58MvlW+eMlFHZg4nc4QdJtHcOF3w9+zoVaQtm1K7kkAfODEY9uIsjNUIeF20NM63KHVzAvNCoFemqgmYFno4pPQ8WIcI0/UXdTKvtV9HRSXIMfgFgDUvGSeeUIMXtiLyDUqwqJCK5V6VizAZx+mnIB0DkCtxrJxTddSgzgwPQ44GzvtBx6BsjoDLeliSja79ic++LauKURMR23gNO/8pV6m/A/kt6NUf3L+zzTJssnDDopBZXy3Igp8M93s3Vf57Od3IIbQklle9CC4do5Bm3lLmwWxcej7coiaPUoISoSwytyMsDN7TxSKaMlgL1wKeQbTNAaD5GJWFFwaU6PitPCe8Ki5NOgs2ZUdYnMqBIUE42gaPiJWeNwVQT9ePLtxcEJ1GKL+v7DYNXASaqULKkXzwpdvFp6AtVrqdHc3338m6Vy8Lz14ls3M2aBcwplX2x4Gv4rag0Ap786cxiPmPVt7qsH9PrZzWgX8vT+X/U1rHwI/mIY7tOXzNGdaTQIGgZnzaKyJYX9QQ/hwSBbSHpFvIm5hjroON6mtXFCjwfhuZHTNWLHVsn+nlQ4nHCu9KQPRvn/Bawz6aFwkRBkhJD+DPDHaQHyFRh3iHCPgOnoy6/irxKX6VEn2hRfTSi67ZB5jpJCn6OrmXdVbhg="
+  file: "$DEPLOY_FILE"
+  skip_cleanup: true
+  on:
+    tags: true
+    condition: $DEPLOY = true

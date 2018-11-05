@@ -1,0 +1,21 @@
+[package]
+name = "machine-usable-words-generator"
+description = "Generate sets of English words, sorted and segregated for machine consumption"
+repository = "https://github.com/nabijaczleweli/machine-usable-words"
+readme = "README.md"
+keywords = ["generate", "word", "english"]
+categories = ["text-processing"]
+license = "MIT"
+# Remember to also update in appveyor.yml
+version = "0.1.0"
+# Remember to also update in machine-usable-words-generator.md
+authors = ["nabijaczleweli <nabijaczleweli@gmail.com>"]
+
+[dependencies]
+reqwest = "0.8"
+
+
+[[bin]]
+name = "machine-usable-words"
+test = false
+doc = false

@@ -1,0 +1,59 @@
+{
+	"build_systems":
+	[
+		{
+			"working_dir": "$project_path",
+			"shell_cmd": "cd generator && cargo build --color always",
+			"name": "Build generator",
+
+			"target": "ansi_color_build",
+			"syntax": "Packages/ANSIescape/ANSI.tmLanguage"
+		},
+		{
+			"working_dir": "$project_path",
+			"cmd": "cd generator && cargo build --color always && cd .. && ./generator/target/debug/machine-usable-words-generator",
+			"name": "Generate machine usable words",
+
+			"target": "ansi_color_build",
+			"syntax": "Packages/ANSIescape/ANSI.tmLanguage"
+		}
+	],
+	"folders":
+	[
+		{
+			"follow_symlinks": true,
+			"name": "Generator source",
+			"path": "generator"
+		},
+		{
+			"follow_symlinks": true,
+			"name": "Plaintext words",
+			"path": "raw"
+		},
+		{
+			"follow_symlinks": true,
+			"name": "Rust-formatted words",
+			"path": "rust"
+		},
+		{
+			"file_include_patterns":
+			[
+				"*Makefile*",
+				"*.yml",
+				"Cargo.*",
+				"build.rs"
+			],
+			"folder_exclude_patterns":
+			[
+				"*"
+			],
+			"follow_symlinks": true,
+			"name": "Build files",
+			"path": "."
+		}
+	],
+	"settings": {
+		"tab_size": 4,
+		"translate_tabs_to_spaces": true
+	}
+}
