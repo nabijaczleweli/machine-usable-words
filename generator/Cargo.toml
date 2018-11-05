@@ -13,9 +13,3 @@ authors = ["nabijaczleweli <nabijaczleweli@gmail.com>"]
 
 [dependencies]
 reqwest = "0.8"
-
-
-[[bin]]
-name = "machine-usable-words"
-test = false
-doc = false
