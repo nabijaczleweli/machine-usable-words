@@ -3,8 +3,8 @@ extern crate reqwest;
 
 mod util;
 
+use self::util::{PolyWrite, uppercase_first};
 use std::io::{BufReader, BufRead, Write};
-use self::util::uppercase_first;
 use std::collections::BTreeSet;
 use std::fs::{self, File};
 use std::path::Path;
@@ -34,36 +34,53 @@ fn words_rust<'w, Adj, N, Adv>(adjectives: Adj, nouns: N, adverbs: Adv, out_dir:
           N: IntoIterator<Item = &'w String>,
           Adv: IntoIterator<Item = &'w String>
 {
-    let dest_path = out_dir.join("words.rs");
-    let mut f = File::create(&dest_path).unwrap();
+    let mut words_f = File::create(out_dir.join("words.rs")).unwrap();
 
-    f.write_all("/// A set of upper-case-first adjectives for random string gen.\n".as_bytes()).unwrap();
-    f.write_all("pub static ADJECTIVES: &[&str] = &[\n".as_bytes()).unwrap();
-    for adj in adjectives {
-        f.write_all("   \"".as_bytes()).unwrap();
-        f.write_all(adj.as_bytes()).unwrap();
-        f.write_all("\",\n".as_bytes()).unwrap();
+    {
+        let adjectives_f = File::create(out_dir.join("adjectives.rs")).unwrap();
+        let mut files = PolyWrite(&mut words_f, adjectives_f);
+
+        files.write_all("/// A set of upper-case-first adjectives for random string gen.\n".as_bytes()).unwrap();
+        files.write_all("pub static ADJECTIVES: &[&str] = &[\n".as_bytes()).unwrap();
+        for adj in adjectives {
+            files.write_all("   \"".as_bytes()).unwrap();
+            files.write_all(adj.as_bytes()).unwrap();
+            files.write_all("\",\n".as_bytes()).unwrap();
+        }
+        files.write_all("];\n".as_bytes()).unwrap();
     }
-    f.write_all("];\n".as_bytes()).unwrap();
-    f.write_all("\n".as_bytes()).unwrap();
-    f.write_all("/// A set of upper-case-first nouns for random string gen.\n".as_bytes()).unwrap();
-    f.write_all("pub static NOUNS: &[&str] = &[\n".as_bytes()).unwrap();
-    for noun in nouns {
-        f.write_all("   \"".as_bytes()).unwrap();
-        f.write_all(noun.as_bytes()).unwrap();
-        f.write_all("\",\n".as_bytes()).unwrap();
+    words_f.write_all("\n".as_bytes()).unwrap();
+
+    {
+        let nouns_f = File::create(out_dir.join("nouns.rs")).unwrap();
+        let mut files = PolyWrite(&mut words_f, nouns_f);
+
+        files.write_all("/// A set of upper-case-first nouns for random string gen.\n".as_bytes()).unwrap();
+        files.write_all("pub static NOUNS: &[&str] = &[\n".as_bytes()).unwrap();
+        for noun in nouns {
+            files.write_all("   \"".as_bytes()).unwrap();
+            files.write_all(noun.as_bytes()).unwrap();
+            files.write_all("\",\n".as_bytes()).unwrap();
+        }
+        files.write_all("];\n".as_bytes()).unwrap();
     }
-    f.write_all("];\n".as_bytes()).unwrap();
-    f.write_all("\n".as_bytes()).unwrap();
-    f.write_all("/// A set of upper-case-first adverbs for random string gen.\n".as_bytes()).unwrap();
-    f.write_all("pub static ADVERBS: &[&str] = &[\n".as_bytes()).unwrap();
-    for adv in adverbs {
-        f.write_all("   \"".as_bytes()).unwrap();
-        f.write_all(adv.as_bytes()).unwrap();
-        f.write_all("\",\n".as_bytes()).unwrap();
+    words_f.write_all("\n".as_bytes()).unwrap();
+
+    {
+        let adverbs_f = File::create(out_dir.join("adverbs.rs")).unwrap();
+        let mut files = PolyWrite(&mut words_f, adverbs_f);
+
+        files.write_all("/// A set of upper-case-first adverbs for random string gen.\n".as_bytes()).unwrap();
+        files.write_all("pub static ADVERBS: &[&str] = &[\n".as_bytes()).unwrap();
+        for adv in adverbs {
+            files.write_all("   \"".as_bytes()).unwrap();
+            files.write_all(adv.as_bytes()).unwrap();
+            files.write_all("\",\n".as_bytes()).unwrap();
+        }
+        files.write_all("];\n".as_bytes()).unwrap();
     }
-    f.write_all("];\n".as_bytes()).unwrap();
 }
+
 
 fn words_first_adjectives() -> Vec<String> {
     let mut currently = false;
