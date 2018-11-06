@@ -1,7 +1,10 @@
 extern crate reqwest;
 
 
+mod util;
+
 use std::io::{BufReader, BufRead, Write};
+use self::util::uppercase_first;
 use std::collections::BTreeSet;
 use std::fs::{self, File};
 use std::path::Path;
@@ -60,15 +63,6 @@ fn words_rust<'w, Adj, N, Adv>(adjectives: Adj, nouns: N, adverbs: Adv, out_dir:
         f.write_all("\",\n".as_bytes()).unwrap();
     }
     f.write_all("];\n".as_bytes()).unwrap();
-}
-
-/// Stolen from https://stackoverflow.com/a/38406885/2851815.
-fn uppercase_first(s: String) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-    }
 }
 
 fn words_first_adjectives() -> Vec<String> {
