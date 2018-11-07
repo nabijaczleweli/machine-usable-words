@@ -12,4 +12,5 @@ version = "0.1.0"
 authors = ["nabijaczleweli <nabijaczleweli@gmail.com>"]
 
 [dependencies]
-reqwest = "0.8"
+reqwest = "0.9"
+clap = "2.32"

@@ -13,7 +13,7 @@ pub use self::polywrite::PolyWrite;
 /// # Examples
 ///
 /// ```
-/// # use bloguen::util::uppercase_first;
+/// # use machine_usable_words_generator::util::uppercase_first;
 /// assert_eq!(uppercase_first("abolish"), "Abolish".to_string());
 /// ```
 pub fn uppercase_first(s: String) -> String {

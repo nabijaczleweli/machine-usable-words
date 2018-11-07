@@ -11,7 +11,7 @@ use std::cmp;
 /// # Examples
 ///
 /// ```
-/// # use bloguen::util::PolyWrite;
+/// # use machine_usable_words_generator::util::PolyWrite;
 /// # use std::io::Write;
 /// let mut out_1 = vec![];
 /// let mut out_2 = vec![];

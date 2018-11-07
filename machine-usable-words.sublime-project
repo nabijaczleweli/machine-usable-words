@@ -11,7 +11,7 @@
 		},
 		{
 			"working_dir": "$project_path",
-			"cmd": "cd generator && cargo build --color always && cd .. && ./generator/target/debug/machine-usable-words-generator",
+			"shell_cmd": "cd generator && cargo build --color always && cargo run --color always -- ..",
 			"name": "Generate machine usable words",
 
 			"target": "ansi_color_build",
@@ -23,7 +23,11 @@
 		{
 			"follow_symlinks": true,
 			"name": "Generator source",
-			"path": "generator"
+			"path": "generator",
+			"folder_exclude_patterns":
+			[
+				"generator/target"
+			],
 		},
 		{
 			"follow_symlinks": true,

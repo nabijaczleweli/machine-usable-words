@@ -1,18 +1,23 @@
 extern crate reqwest;
+#[macro_use]
+extern crate clap;
 
 
+mod options;
 mod util;
 
 use self::util::{PolyWrite, uppercase_first};
 use std::io::{BufReader, BufRead, Write};
 use std::collections::BTreeSet;
+use self::options::Options;
 use std::fs::{self, File};
 use std::path::Path;
 use std::mem;
 
 
 fn main() {
-    let root_dir = Path::new(".");
+    let opts = Options::parse();
+    println!("{:#?}", opts);
 
     let adjectives = words_first_adjectives().into_iter().chain(words_second_adjectives().into_iter()).map(uppercase_first).collect::<BTreeSet<_>>();
     let mut nouns = words_nouns();
@@ -23,7 +28,7 @@ fn main() {
     }
     let adverbs = words_first_adverbs().into_iter().chain(words_second_adverbs().into_iter()).map(uppercase_first).collect::<BTreeSet<_>>();
 
-    let rust_root = root_dir.join("rust");
+    let rust_root = opts.output_dir.1.join("rust");
     fs::create_dir_all(&rust_root).unwrap();
     words_rust(&adjectives, &nouns, &adverbs, &rust_root);
 }
