@@ -17,7 +17,6 @@ use std::mem;
 
 fn main() {
     let opts = Options::parse();
-    println!("{:#?}", opts);
 
     let adjectives = words_first_adjectives().into_iter().chain(words_second_adjectives().into_iter()).map(uppercase_first).collect::<BTreeSet<_>>();
     let mut nouns = words_nouns();
@@ -31,6 +30,10 @@ fn main() {
     let rust_root = opts.output_dir.1.join("rust");
     fs::create_dir_all(&rust_root).unwrap();
     words_rust(&adjectives, &nouns, &adverbs, &rust_root);
+
+    let raw_root = opts.output_dir.1.join("raw");
+    fs::create_dir_all(&raw_root).unwrap();
+    words_raw(&adjectives, &nouns, &adverbs, &raw_root);
 }
 
 
@@ -83,6 +86,46 @@ fn words_rust<'w, Adj, N, Adv>(adjectives: Adj, nouns: N, adverbs: Adv, out_dir:
             files.write_all("\",\n".as_bytes()).unwrap();
         }
         files.write_all("];\n".as_bytes()).unwrap();
+    }
+}
+
+fn words_raw<'w, Adj, N, Adv>(adjectives: Adj, nouns: N, adverbs: Adv, out_dir: &Path)
+    where Adj: IntoIterator<Item = &'w String>,
+          N: IntoIterator<Item = &'w String>,
+          Adv: IntoIterator<Item = &'w String>
+{
+    let mut words_f = File::create(out_dir.join("words")).unwrap();
+
+    {
+        let adjectives_f = File::create(out_dir.join("adjectives")).unwrap();
+        let mut files = PolyWrite(&mut words_f, adjectives_f);
+
+        for adj in adjectives {
+            files.write_all(adj.as_bytes()).unwrap();
+            files.write_all("\n".as_bytes()).unwrap();
+        }
+    }
+    words_f.write_all("\n".as_bytes()).unwrap();
+
+    {
+        let nouns_f = File::create(out_dir.join("nouns")).unwrap();
+        let mut files = PolyWrite(&mut words_f, nouns_f);
+
+        for noun in nouns {
+            files.write_all(noun.as_bytes()).unwrap();
+            files.write_all("\n".as_bytes()).unwrap();
+        }
+    }
+    words_f.write_all("\n".as_bytes()).unwrap();
+
+    {
+        let adverbs_f = File::create(out_dir.join("adverbs")).unwrap();
+        let mut files = PolyWrite(&mut words_f, adverbs_f);
+
+        for adv in adverbs {
+            files.write_all(adv.as_bytes()).unwrap();
+            files.write_all("\n".as_bytes()).unwrap();
+        }
     }
 }
 
