@@ -12,20 +12,19 @@ use std::collections::BTreeSet;
 use self::options::Options;
 use std::fs::{self, File};
 use std::path::Path;
-use std::mem;
 
 
 fn main() {
     let opts = Options::parse();
 
     let adjectives = words_first_adjectives().into_iter().chain(words_second_adjectives().into_iter()).map(uppercase_first).collect::<BTreeSet<_>>();
-    let mut nouns = words_nouns();
-    for n in &mut nouns {
-        let mut t = String::new();
-        mem::swap(&mut t, n);
-        *n = uppercase_first(t);
-    }
-    let adverbs = words_first_adverbs().into_iter().chain(words_second_adverbs().into_iter()).map(uppercase_first).collect::<BTreeSet<_>>();
+    let nouns = words_first_nouns().into_iter().chain(words_second_nouns().into_iter()).map(uppercase_first).collect::<BTreeSet<_>>();
+    let adverbs = words_first_adverbs()
+        .into_iter()
+        .chain(words_second_adverbs().into_iter())
+        .chain(words_third_adverbs().into_iter())
+        .map(uppercase_first)
+        .collect::<BTreeSet<_>>();
 
     let rust_root = opts.output_dir.1.join("rust");
     fs::create_dir_all(&rust_root).unwrap();
@@ -131,47 +130,14 @@ fn words_raw<'w, Adj, N, Adv>(adjectives: Adj, nouns: N, adverbs: Adv, out_dir: 
 
 
 fn words_first_adjectives() -> Vec<String> {
-    let mut currently = false;
-    let mut coll = vec![];
-
-    for l in BufReader::new(reqwest::Client::builder()
-            .gzip(true)
-            .build()
-            .unwrap()
-            .get("http://enchantedlearning.com/wordlist/adjectives.shtml")
-            .send()
-            .unwrap())
-        .lines() {
-        let l = l.unwrap();
-        for l in l.split("\r") {
-            let l = l.to_lowercase();
-
-            if l == "</td></tr></table>" {
-                currently = false;
-            }
-
-            if currently && !l.is_empty() {
-                let l = l.replace("<br>", "");
-                if !l.contains('<') && l.len() > 1 {
-                    coll.push(l);
-                }
-            }
-
-            if l.contains("<font size=+0>a</font>") {
-                currently = true;
-                continue;
-            }
-        }
-    }
-
-    coll
+    words_enchantedlearning("http://enchantedlearning.com/wordlist/adjectives.shtml")
 }
 
 fn words_second_adjectives() -> Vec<String> {
     words_talkenglish("http://www.talkenglish.com/vocabulary/top-1500-nouns.aspx")
 }
 
-fn words_nouns() -> Vec<String> {
+fn words_first_nouns() -> Vec<String> {
     BufReader::new(reqwest::Client::builder()
             .gzip(true)
             .build()
@@ -183,6 +149,10 @@ fn words_nouns() -> Vec<String> {
         .map(Result::unwrap)
         .filter(|l| l.len() != 1)
         .collect()
+}
+
+fn words_second_nouns() -> Vec<String> {
+    words_enchantedlearning("http://enchantedlearning.com/wordlist/nounandverb.shtml")
 }
 
 fn words_first_adverbs() -> Vec<String> {
@@ -224,6 +194,10 @@ fn words_second_adverbs() -> Vec<String> {
     coll
 }
 
+fn words_third_adverbs() -> Vec<String> {
+    words_enchantedlearning("https://www.enchantedlearning.com/wordlist/adjectives.shtml")
+}
+
 fn words_talkenglish(url: &str) -> Vec<String> {
     BufReader::new(reqwest::Client::builder()
             .gzip(true)
@@ -239,4 +213,41 @@ fn words_talkenglish(url: &str) -> Vec<String> {
         .skip(1)
         .filter(|l| l.len() != 1)
         .collect()
+}
+
+fn words_enchantedlearning(url: &str) -> Vec<String> {
+    let mut currently = false;
+    let mut coll = vec![];
+
+    for l in BufReader::new(reqwest::Client::builder()
+            .gzip(true)
+            .build()
+            .unwrap()
+            .get(url)
+            .send()
+            .unwrap())
+        .lines() {
+        let l = l.unwrap();
+        for l in l.split("\r") {
+            let l = l.to_lowercase();
+
+            if l == "</td></tr></table>" {
+                currently = false;
+            }
+
+            if currently && !l.is_empty() {
+                let l = l.replace("<br>", "");
+                if !l.contains('<') && l.len() > 1 {
+                    coll.push(l);
+                }
+            }
+
+            if l.contains("<font size=+0>a</font>") {
+                currently = true;
+                continue;
+            }
+        }
+    }
+
+    coll
 }
