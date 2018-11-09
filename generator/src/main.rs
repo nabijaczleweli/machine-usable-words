@@ -172,7 +172,7 @@ fn words_second_adverbs() -> Vec<String> {
             .unwrap())
         .lines() {
         let l = l.unwrap();
-        for l in l.split("\r") {
+        for l in l.split('\r') {
             let l = l.to_lowercase();
 
             if l.contains("100.") {
@@ -181,7 +181,7 @@ fn words_second_adverbs() -> Vec<String> {
 
             if currently && !l.contains("div>") {
                 let l = l.replace("<br />", "").replace("<p>", "").replace("</p>", "").replace("/>", "");
-                coll.push(l.rsplitn(2, " ").next().unwrap().trim().to_string());
+                coll.push(l.rsplitn(2, ' ').next().unwrap().trim().to_string());
             }
 
             if l.contains("<p>1.") {
@@ -209,7 +209,7 @@ fn words_talkenglish(url: &str) -> Vec<String> {
         .lines()
         .map(Result::unwrap)
         .filter(|l| l.contains(r#"<a href="/how-to-use/"#))
-        .filter_map(|l| l.replace("</a>", "").replace('>', "\n").split("\n").skip(1).next().map(|s| s.to_string()))
+        .filter_map(|l| l.replace("</a>", "").replace('>', "\n").split('\n').nth(1).map(|s| s.to_string()))
         .skip(1)
         .filter(|l| l.len() != 1)
         .collect()
@@ -228,7 +228,7 @@ fn words_enchantedlearning(url: &str) -> Vec<String> {
             .unwrap())
         .lines() {
         let l = l.unwrap();
-        for l in l.split("\r") {
+        for l in l.split('\r') {
             let l = l.to_lowercase();
 
             if l == "</td></tr></table>" {
