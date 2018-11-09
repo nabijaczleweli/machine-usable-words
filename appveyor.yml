@@ -18,8 +18,10 @@ install:
 build: off
 build_script:
   - git submodule update --init --recursive
+  - cd generator
   - cargo build --verbose --release
-  - cp target\release\machine-usable-words-generator.exe machine-usable-words-generator-v0.1.0.exe
+  - cp target\release\machine-usable-words-generator.exe ../machine-usable-words-generator-v0.1.0.exe
+  - cd ..
   - strip --strip-all --remove-section=.comment --remove-section=.note machine-usable-words-generator-v0.1.0.exe
 
 test: off
